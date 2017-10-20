@@ -1,0 +1,9 @@
+How to use the model:
+
+1- Load it on ACT-R
+2- Use this command to run it: "(run-experiment-decision)". 
+   This will run the experiment for 100 times.
+   The results are left on the /outputs folder.
+
+To run it once:
+(run-experiment-decision-once)
