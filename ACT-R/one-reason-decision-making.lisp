@@ -25,11 +25,23 @@
 ; Writes the results into a file.
 (defun write-result ()
 
-  (with-open-file (str "C:\\Users\\panch\\Google Drive\\Proyectos\\GitHub\\evacuation-actr\\ACT-R\\outputs\\experiment-test.csv"
+  (with-open-file (str "C:\\Users\\panch\\Google Drive\\Proyectos\\GitHub\\evacuation-actr\\ACT-R\\outputs\\experiment-threshold.csv"
                      :direction :output
                      :if-exists :append
                      :if-does-not-exist :create)
     (format str "~%~A,~A,~A,~A,~A,~A" *i* *opt1* *opt2* *response* (mp-time) *threshold*)
+  )
+  ; The ~% means "new line"
+)
+
+(defun write-titles ()
+
+  (with-open-file (str "C:\\Users\\panch\\Google Drive\\Proyectos\\GitHub\\evacuation-actr\\ACT-R\\outputs\\experiment-threshold.csv"
+                     :direction :output
+                     :if-exists :append
+                     :if-does-not-exist :create)
+
+    (format str "id, opt1, opt2, response, time, threshold")
   )
   ; The ~% means "new line"
 )
@@ -39,7 +51,7 @@
 ; Retrieval threshold simulator
 ; Runs several experiments adjusting in each time the retrieval threshold value.
 (defun run-threshold-experiment()
-  (loop for *index* from -100 to 100 do
+  (loop for *index* from 1 to 100 do
     (setq *threshold* (/ *index* 10))
     (run-experiment-decision)
   )
@@ -48,27 +60,45 @@
 
 ; Runs the experiment several times. In each cycle, the model is reset.
 (defun run-experiment-decision()
-  (loop for *i* from 1 to 10 do
+  (write-titles)
+  (loop for *i* from 1 to 100 do
     (run-experiment-decision-once)
   )
 )
 
 ; Runs the experiment only once (i.e. one subject)
 (defun run-experiment-decision-once ()
+
+  ;All combinations of known doors
   (run-first-model "b" "d")(write-result) ; <- the "run-first-model" function includes a reset.
   (run-model "c" "d")(write-result)
   (run-model "c" "b")(write-result)
   (run-model "b" "a")(write-result)
+
   (run-model "d" "c")(write-result)
   (run-model "a" "c")(write-result)
   (run-model "c" "a")(write-result)
   (run-model "a" "d")(write-result)
+
   (run-model "d" "b")(write-result)
   (run-model "d" "a")(write-result)
   (run-model "b" "c")(write-result)
   (run-model "a" "b")(write-result)
 
   (run-model "a" "e")(write-result)
+  (run-model "e" "b")(write-result)
+  (run-model "e" "c")(write-result)
+  (run-model "d" "e")(write-result)
+
+  (run-model "f" "d")(write-result)
+  (run-model "a" "f")(write-result)
+  (run-model "f" "c")(write-result)
+  (run-model "f" "b")(write-result)
+
+  (run-model "f" "g")(write-result)
+  (run-model "h" "i")(write-result)
+  (run-model "j" "k")(write-result)
+  (run-model "l" "m")(write-result)
 )
 
 ; Resets the model, opens the window and runs the experiment.
@@ -129,8 +159,8 @@
 (define-model choice
 
   (eval `(sgp :rt, *threshold*))
-  ;(sgp :v nil :esc t :show-focus t :esc t :ans 0.5)
-  (sgp :esc t :show-focus t :esc t :ans 0.5)
+  (sgp :v nil :esc t :show-focus t :esc t :ans 0.5)
+  ;(sgp :esc t :show-focus t :esc t :ans 0.5)
 
   ; sgp   = set general parameter
   ; :v    = verbose
@@ -392,7 +422,25 @@
 
   ; ERROR  ; occurs when the cue cannot be retrieved
 
-  (P choose_option_1_error_1st_cue
+  (P choose_option_1_error_unknown_is_1
+    =goal>
+      state   retrieve_cue
+      value   cue1  ; safety cue
+    ?imaginal>
+      state   free
+    =imaginal>
+      option1 =option
+      value1  "?"
+      value2  0
+  ==>
+    ; decision has been made
+    =goal>
+      state chosen
+      value =option
+    =imaginal>
+  )
+
+  (P choose_option_1_error_unknown_is_2
     =goal>
       state   retrieve_cue
       value   cue1  ; safety cue
@@ -410,14 +458,14 @@
     =imaginal>
   )
 
-  (P choose_option_2_error_1st_cue
+  (P choose_option_2_error_unknown_is_1
     =goal>
       state   retrieve_cue
       value   cue1  ; safety cue
     ?imaginal>
       state   free
     =imaginal>
-      option1 =option
+      option2 =option
       value1  "?"
       value2  1
   ==>
@@ -428,33 +476,15 @@
     =imaginal>
   )
 
-  (P choose_option_1_error_2nd_cue
+  (P choose_option_2_error_unknown_is_2
     =goal>
       state   retrieve_cue
-      value   cue2  ; safety cue
+      value   cue1  ; safety cue
     ?imaginal>
       state   free
     =imaginal>
       option1 =option
-      value1  "?"
-    -  value2  "?"
-  ==>
-    ; decision has been made
-    =goal>
-      state chosen
-      value =option
-    =imaginal>
-  )
-
-  (P choose_option_2_error_2nd_cue
-    =goal>
-      state   retrieve_cue
-      value   cue2  ; safety cue
-    ?imaginal>
-      state   free
-    =imaginal>
-      option1 =option
-    -  value1  "?"
+      value1  0
       value2  "?"
   ==>
     ; decision has been made
@@ -463,6 +493,10 @@
       value =option
     =imaginal>
   )
+
+
+
+
 
   (P choose_randomly
     =goal>
@@ -611,10 +645,10 @@
 
 
   ; Setting base-levels
-  (set-base-levels (cue1_a 1.7))
-  (set-base-levels (cue1_b 1.7))
-  (set-base-levels (cue1_c 1.7))
-  (set-base-levels (cue1_d 1.7))
+  (set-base-levels (cue1_a 3.0))
+  (set-base-levels (cue1_b 3.0))
+  (set-base-levels (cue1_c 3.0))
+  (set-base-levels (cue1_d 3.0))
 
   (set-base-levels (cue2_a 2.5))
   (set-base-levels (cue2_b 2.5))
