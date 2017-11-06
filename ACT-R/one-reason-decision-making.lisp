@@ -51,7 +51,8 @@
 ; Retrieval threshold simulator
 ; Runs several experiments adjusting in each time the retrieval threshold value.
 (defun run-threshold-experiment()
-  (loop for *index* from 1 to 100 do
+  (write-titles)
+  (loop for *index* from -100 to 100 do
     (setq *threshold* (/ *index* 10))
     (run-experiment-decision)
   )
@@ -60,7 +61,7 @@
 
 ; Runs the experiment several times. In each cycle, the model is reset.
 (defun run-experiment-decision()
-  (write-titles)
+  ;(write-titles)
   (loop for *i* from 1 to 100 do
     (run-experiment-decision-once)
   )
